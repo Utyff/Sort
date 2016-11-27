@@ -9,10 +9,12 @@ public class Main {
         Scanner s = new Scanner(System.in);
         String str;
 
+        DataFile df = new DataFile("f1.txt");
+        df.createRandom(1000);
         // str = s.nextLine(); System.out.println(str);
 
         String[] arr = MergeSort.getRandomArray(20);
-        System.out.println(arr.length);
+        //System.out.println(arr.length);
 
         MergeSort.doSort(arr);
         for (String anArr : arr) System.out.println(anArr);
