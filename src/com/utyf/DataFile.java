@@ -9,20 +9,75 @@ import java.util.UUID;
 
 
 class DataFile {
-//    private String name;
+    static final int ELEMENT_SIZE = 37;
+    String name;
 //    Path   path;
     private RandomAccessFile raf;
 
     DataFile(String _name) {
-//        name = _name;
-//        path = Paths.get(name);
+        name = _name;
         try {
             raf = new RandomAccessFile(_name, "rw");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
+    String seek(int index) {
+        try {
+            raf.seek( index*ELEMENT_SIZE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        return null;
+    }
+
+    String get(int index) {
+        try {
+            raf.seek( index*ELEMENT_SIZE);
+            return raf.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        return null;
+    }
+
+    String getNext() {
+        try {
+            return raf.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        return null;
+    }
+
+    void put(int index, String str) {
+        try {
+            raf.seek( index*ELEMENT_SIZE);
+            raf.writeBytes( str+"\n" );
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    void putNext(String str) {
+        try {
+            raf.writeBytes( str+"\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
     void createRandom(int size) {
         String str;
         byte[] bytes;
@@ -37,6 +92,7 @@ class DataFile {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }
