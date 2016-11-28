@@ -6,8 +6,7 @@ import java.io.File;
 class FileSort {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    static void doSort(String _src, String _tmp)
-    {
+    static void doSort(String _src, String _tmp) {
         int n = Main.ELEMENTS_NUMBER;
         DataFile src = new DataFile(_src);
         DataFile tmp = new DataFile(_tmp);
@@ -41,27 +40,20 @@ class FileSort {
 
     //  Left run is A[iLeft :iRight-1].
     // Right run is A[iRight:iEnd-1  ].
-    private static void merge(DataFile A, int iLeft, int iRight, int iEnd, DataFile B)
-    {
+    private static void merge(DataFile A, int iLeft, int iRight, int iEnd, DataFile B) {
+
         int i = iLeft;
         int j = iRight;
-        A.readBlock1(iLeft,  iRight-iLeft);
-        A.readBlock2(iRight, iEnd-iRight);
-        B.setBlock1 (iLeft,  iEnd-iLeft);
+
         // While there are elements in the left or right runs...
-        for (int k = iLeft; k < iEnd; k++) {
+        for (int k = iLeft; k < iEnd; k++)
             // If left run head exists and is <= existing right run head.
-            if (i < iRight && (j >= iEnd || A.compare()) ) { // A[i] <= A[j]
-                B.copyFrom(A, 1);
-                A.step1(true);
-                i++;
-            } else {
-                B.copyFrom(A, 2);
-                A.step2();
-                j++;
-            }
-        }
-        B.flushBuffer();
+            if (i < iRight && (j >= iEnd || A.compare(i,j)) )  // A[i] <= A[j]
+                B.copyFrom1(A, i++, k);
+            else
+                B.copyFrom2(A, j++, k);
+
+//        B.writeBlock(); // write last block
     }
 
 }

@@ -10,13 +10,11 @@ import java.util.UUID;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 class DataFile {
-    String name;
+    String  name;
+    int     start1=0, start2=0;   // buffers begin
+    byte[]  b1 = new byte[Main.ELEMENTS_NUMBER*Main.ELEMENT_SIZE];
+    byte[]  b2 = new byte[Main.ELEMENTS_NUMBER*Main.ELEMENT_SIZE];
     private RandomAccessFile raf;
-    int    i1, i2;           // absolute current read position in buffer
-    int    start1, start2;   // buffers begin
-    int    size1, size2;     // buffers parameters
-    byte[] b1 = new byte[Main.ELEMENTS_NUMBER*Main.ELEMENT_SIZE];
-    byte[] b2 = new byte[Main.ELEMENTS_NUMBER*Main.ELEMENT_SIZE];
 
     DataFile(String _name) {
         name = _name;
@@ -26,164 +24,86 @@ class DataFile {
             e.printStackTrace();
             System.exit(1);
         }
+        readBlock(0, b1);
+        readBlock(0, b2);
     }
 
 
-    void setBlock1(int start, int _sz) {
-        start1 = start;
-        i1 = start;
-        size1 = _sz;
+    void copyFrom1(DataFile src, int idxA, int idxB) {
+        src.checkRead1(idxA);
+
+        int firstSRC = (idxA-src.start1) * Main.ELEMENT_SIZE;
+        int firstDST = (idxB-    start1) * Main.ELEMENT_SIZE;
+        System.arraycopy(src.b1, firstSRC, b1, firstDST, Main.ELEMENT_SIZE);
+
+        checkWrite(idxB);
     }
 
-    void readBlock1(int start, int _sz) {
-        start1 = start;
-        i1 = start;
-        size1 = _sz;
-        readBlock(start, _sz, b1);
+    void copyFrom2(DataFile src, int idxA, int idxB) {
+        src.checkRead2(idxA);
+
+        int firstSRC = (idxA-src.start2) * Main.ELEMENT_SIZE;
+        int firstDST = (idxB-    start1) * Main.ELEMENT_SIZE;
+        System.arraycopy(src.b2, firstSRC, b1, firstDST, Main.ELEMENT_SIZE);
+
+        checkWrite(idxB);
     }
 
-    void readBlock2(int start, int _sz) {
-        start2 = start;
-        i2 = start;
-        size2 = _sz;
-        readBlock(start, _sz, b2);
-    }
+    boolean compare(int idx1, int idx2) {  //   A[i] <= A[j]
 
-    private void readBlock(int start, int _sz, byte[] bb) {
-        try {
-            raf.seek(start*Main.ELEMENT_SIZE);
-            raf.read(bb, 0, Math.min(_sz,Main.BUFFER_SIZE)*Main.ELEMENT_SIZE);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+        checkRead1(idx1);
+        checkRead1(idx2);
+
+        int first1 = (idx1 - start1)*Main.ELEMENT_SIZE;
+        int first2 = (idx2 - start2)*Main.ELEMENT_SIZE;
+
+        for( int i=0; i<Main.ELEMENT_SIZE; i++ ) {
+            if (b1[first1 + i] == b2[first2 + i]) continue;
+            return b1[first1 + i] < b2[first2 + i];
         }
-    }
-
-    void step1(boolean read) {
-        i1++;
-        step(start1, i1, size1, b1, read);
-    }
-
-    void step2() {
-        i2++;
-        step(start2, i2, size2, b2, true);
-    }
-
-    void step(int start, int ii, int _size, byte[] bb, boolean read) {
-        if( _size>=ii-start || ii%Main.BUFFER_SIZE!=0 )  // need to load next block?
-            return;
-
-        try {
-            if( read ) {
-                // load next block
-                raf.seek(ii * Main.ELEMENT_SIZE);
-                raf.read(bb,
-                        0,
-                        Math.min(start + _size - ii, Main.BUFFER_SIZE) * Main.ELEMENT_SIZE);
-            } else {
-                // save current block
-                raf.seek((ii - Main.BUFFER_SIZE) * Main.ELEMENT_SIZE);
-                raf.write(bb,
-                        0,
-                        Main.BUFFER_SIZE * Main.ELEMENT_SIZE);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
-    void copyFrom(DataFile src, int blockNum) {
-
-        int first1 = (i1 - start1)*Main.ELEMENT_SIZE;
-        if( blockNum==1 ) {
-            int first2 = (src.i1 - src.start1) * Main.ELEMENT_SIZE;
-            System.arraycopy(src.b1, first2, b1, first1, Main.ELEMENT_SIZE);
-        } else {
-            int first2 = (src.i2 - src.start2) * Main.ELEMENT_SIZE;
-            System.arraycopy(src.b2, first2, b1, first1, Main.ELEMENT_SIZE);
-        }
-
-        step1(false);
-    }
-
-    boolean compare() {  //   A[i] <= A[j]
-        int first1 = (i1 - start1)*Main.ELEMENT_SIZE;
-        int first2 = (i2 - start2)*Main.ELEMENT_SIZE;
-
-        for( int i=0; i<Main.ELEMENT_SIZE; i++ )
-            if( b1[first1+i]>b2[first2+i] ) return false;
         return true;
     }
 
-    void flushBuffer() {
-        try {
-            int sz;
-            if( size1<Main.BUFFER_SIZE )
-                sz = size1;                   // all buffer
-            else
-                sz = size1%Main.BUFFER_SIZE;  // only last part
+    void checkRead1(int idx) {
+        if( idx<start1 || idx>=start1+Main.BUFFER_SIZE ) {
+            start1 = idx;
+            readBlock(start1, b1);
+        }
+    }
 
-            raf.seek((start1+size1-sz)*Main.ELEMENT_SIZE);
-            raf.write(b1, 0, sz*Main.ELEMENT_SIZE);
+    void checkRead2(int idx) {
+        if( idx<start2 || idx>=start2+Main.BUFFER_SIZE ) {
+            start2 = idx;
+            readBlock(start2, b2);
+        }
+    }
+
+    void checkWrite(int idx) {
+        if( idx==start1+Math.min(Main.ELEMENTS_NUMBER-start1,Main.BUFFER_SIZE)-1 ) {
+            writeBlock();
+            start1 = idx+1;
+        }
+    }
+
+    private void readBlock(int start, byte[] bb) {
+        try {
+            raf.seek(start*Main.ELEMENT_SIZE);
+            raf.read(bb, 0, Math.min(Main.ELEMENTS_NUMBER-start,Main.BUFFER_SIZE)*Main.ELEMENT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
     }
 
-/*    String seek(int index) {
+    void writeBlock() {
         try {
-            raf.seek( index*Main.ELEMENT_SIZE);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        return null;
-    }
-
-    String get(int index) {
-        try {
-            raf.seek( index*Main.ELEMENT_SIZE);
-            return raf.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        return null;
-    }
-
-    String getNext() {
-        try {
-            return raf.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        return null;
-    }
-
-    void put(int index, String str) {
-        try {
-            raf.seek( index*Main.ELEMENT_SIZE);
-            raf.writeBytes( str+"\n" );
+            raf.seek(start1*Main.ELEMENT_SIZE);
+            raf.write(b1, 0, Math.min(Main.ELEMENTS_NUMBER-start1,Main.BUFFER_SIZE)*Main.ELEMENT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
     }
-
-    void putNext(String str) {
-        try {
-            raf.writeBytes( str+"\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    } //*/
 
     @SuppressWarnings("SameParameterValue")
     void createRandom(int size) {
