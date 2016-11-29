@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import static com.utyf.Main.*;
 
 
 
@@ -12,9 +13,9 @@ import java.util.UUID;
 class DataFile {
     String  name;
     int     start1=0, start2=0;   // buffers begin
-    byte[]  b1 = new byte[Main.ELEMENTS_NUMBER*Main.ELEMENT_SIZE];
-    byte[]  b2 = new byte[Main.ELEMENTS_NUMBER*Main.ELEMENT_SIZE];
-    private RandomAccessFile raf;
+    byte[]  b1 = new byte[ELEMENTS_NUMBER*ELEMENT_SIZE];
+    byte[]  b2 = new byte[ELEMENTS_NUMBER*ELEMENT_SIZE];
+    RandomAccessFile raf;
 
     DataFile(String _name) {
         name = _name;
@@ -32,9 +33,9 @@ class DataFile {
     void copyFrom1(DataFile src, int idxA, int idxB) {
         src.checkRead1(idxA);
 
-        int firstSRC = (idxA-src.start1) * Main.ELEMENT_SIZE;
-        int firstDST = (idxB-    start1) * Main.ELEMENT_SIZE;
-        System.arraycopy(src.b1, firstSRC, b1, firstDST, Main.ELEMENT_SIZE);
+        int firstSRC = (idxA-src.start1) * ELEMENT_SIZE;
+        int firstDST = (idxB-    start1) * ELEMENT_SIZE;
+        System.arraycopy(src.b1, firstSRC, b1, firstDST, ELEMENT_SIZE);
 
         checkWrite(idxB);
     }
@@ -42,9 +43,9 @@ class DataFile {
     void copyFrom2(DataFile src, int idxA, int idxB) {
         src.checkRead2(idxA);
 
-        int firstSRC = (idxA-src.start2) * Main.ELEMENT_SIZE;
-        int firstDST = (idxB-    start1) * Main.ELEMENT_SIZE;
-        System.arraycopy(src.b2, firstSRC, b1, firstDST, Main.ELEMENT_SIZE);
+        int firstSRC = (idxA-src.start2) * ELEMENT_SIZE;
+        int firstDST = (idxB-    start1) * ELEMENT_SIZE;
+        System.arraycopy(src.b2, firstSRC, b1, firstDST, ELEMENT_SIZE);
 
         checkWrite(idxB);
     }
@@ -54,10 +55,10 @@ class DataFile {
         checkRead1(idx1);
         checkRead1(idx2);
 
-        int first1 = (idx1 - start1)*Main.ELEMENT_SIZE;
-        int first2 = (idx2 - start2)*Main.ELEMENT_SIZE;
+        int first1 = (idx1 - start1)*ELEMENT_SIZE;
+        int first2 = (idx2 - start2)*ELEMENT_SIZE;
 
-        for( int i=0; i<Main.ELEMENT_SIZE; i++ ) {
+        for( int i=0; i<ELEMENT_SIZE; i++ ) {
             if (b1[first1 + i] == b2[first2 + i]) continue;
             return b1[first1 + i] < b2[first2 + i];
         }
@@ -65,21 +66,21 @@ class DataFile {
     }
 
     void checkRead1(int idx) {
-        if( idx<start1 || idx>=start1+Main.BUFFER_SIZE ) {
+        if( idx<start1 || idx>=start1+BUFFER_SIZE ) {
             start1 = idx;
             readBlock(start1, b1);
         }
     }
 
     void checkRead2(int idx) {
-        if( idx<start2 || idx>=start2+Main.BUFFER_SIZE ) {
+        if( idx<start2 || idx>=start2+BUFFER_SIZE ) {
             start2 = idx;
             readBlock(start2, b2);
         }
     }
 
     void checkWrite(int idx) {
-        if( idx==start1+Math.min(Main.ELEMENTS_NUMBER-start1,Main.BUFFER_SIZE)-1 ) {
+        if( idx==start1+Math.min(ELEMENTS_NUMBER-start1,BUFFER_SIZE)-1 ) {
             writeBlock();
             start1 = idx+1;
         }
@@ -87,8 +88,8 @@ class DataFile {
 
     private void readBlock(int start, byte[] bb) {
         try {
-            raf.seek(start*Main.ELEMENT_SIZE);
-            raf.read(bb, 0, Math.min(Main.ELEMENTS_NUMBER-start,Main.BUFFER_SIZE)*Main.ELEMENT_SIZE);
+            raf.seek(start*ELEMENT_SIZE);
+            raf.read(bb, 0, Math.min(ELEMENTS_NUMBER-start,BUFFER_SIZE)*ELEMENT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -97,8 +98,8 @@ class DataFile {
 
     void writeBlock() {
         try {
-            raf.seek(start1*Main.ELEMENT_SIZE);
-            raf.write(b1, 0, Math.min(Main.ELEMENTS_NUMBER-start1,Main.BUFFER_SIZE)*Main.ELEMENT_SIZE);
+            raf.seek(start1*ELEMENT_SIZE);
+            raf.write(b1, 0, Math.min(ELEMENTS_NUMBER-start1,BUFFER_SIZE)*ELEMENT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);

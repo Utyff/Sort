@@ -8,7 +8,7 @@ public class Main {
 
     static final int ELEMENTS_NUMBER = 10;    // number of elements in file for sort
     static final int BUFFER_SIZE     = 3;     // number of elements for load into memory. Will create 3 buffers
-    static final int ELEMENT_SIZE = 37;
+    static final int ELEMENT_SIZE    = 37;
     static final String fileName = "ForSort.txt"; // name of file for sort
     static final String tempFile = "temp.txt";    // name of temp file (will be deleted)
 
