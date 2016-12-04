@@ -13,8 +13,8 @@ import static com.utyf.Main.*;
 class DataFile {
     String  name;
     int     start1=0, start2=0;   // buffers begin
-    byte[]  b1 = new byte[ELEMENTS_NUMBER*ELEMENT_SIZE];
-    byte[]  b2 = new byte[ELEMENTS_NUMBER*ELEMENT_SIZE];
+    byte[]  b1 = new byte[BUFFER_SIZE*ELEMENT_SIZE];
+    byte[]  b2 = new byte[BUFFER_SIZE*ELEMENT_SIZE];
     RandomAccessFile raf;
 
     DataFile(String _name) {
@@ -25,11 +25,22 @@ class DataFile {
             e.printStackTrace();
             System.exit(1);
         }
-        readBlock(0, b1);
-        readBlock(0, b2);
     }
 
+    void initRead() {
+        readBlock(0, b1);
+        readBlock(0, b2);
+        start1=0;
+        start2=0;
+    }
 
+    void initWrite() {
+        start1=0;
+    }
+
+    /*
+     * Copy element idxA from src.b1 to array b1 idxB
+     */
     void copyFrom1(DataFile src, int idxA, int idxB) {
         src.checkRead1(idxA);
 
@@ -40,6 +51,9 @@ class DataFile {
         checkWrite(idxB);
     }
 
+    /*
+     * Copy element idxA from src.b1 to array b1 idxB
+     */
     void copyFrom2(DataFile src, int idxA, int idxB) {
         src.checkRead2(idxA);
 
@@ -50,21 +64,27 @@ class DataFile {
         checkWrite(idxB);
     }
 
-    boolean compare(int idx1, int idx2) {  //   A[i] <= A[j]
+    /*
+     * Compare element idx1 from b1 with idx2 from b2
+     */
+    boolean isFirstLower(int idx1, int idx2) {  //   A[i] <= A[j]
 
         checkRead1(idx1);
-        checkRead1(idx2);
+        checkRead2(idx2);
 
         int first1 = (idx1 - start1)*ELEMENT_SIZE;
         int first2 = (idx2 - start2)*ELEMENT_SIZE;
 
-        for( int i=0; i<ELEMENT_SIZE; i++ ) {
+        for( int i=0; i<ELEMENT_SIZE-1; i++ ) {
             if (b1[first1 + i] == b2[first2 + i]) continue;
             return b1[first1 + i] < b2[first2 + i];
         }
         return true;
     }
 
+    /*
+     * If element idx not in the b1 - read next block
+     */
     void checkRead1(int idx) {
         if( idx<start1 || idx>=start1+BUFFER_SIZE ) {
             start1 = idx;
@@ -72,6 +92,9 @@ class DataFile {
         }
     }
 
+    /*
+     * If element idx not in the b2 - read next block
+     */
     void checkRead2(int idx) {
         if( idx<start2 || idx>=start2+BUFFER_SIZE ) {
             start2 = idx;
@@ -79,10 +102,15 @@ class DataFile {
         }
     }
 
+    /*
+     * Write current block if idx the last one in the block
+     * Write always use b1
+     */
     void checkWrite(int idx) {
         if( idx==start1+Math.min(ELEMENTS_NUMBER-start1,BUFFER_SIZE)-1 ) {
             writeBlock();
             start1 = idx+1;
+            //if(start1>=Main.ELEMENTS_NUMBER)  start1=0;
         }
     }
 

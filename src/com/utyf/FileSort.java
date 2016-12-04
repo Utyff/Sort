@@ -14,7 +14,9 @@ class FileSort {
         DataFile B = tmp;
 
         // Make successively longer sorted runs of length 2, 4, 8, 16... until whole array is sorted.
-        for (int width = 1; width < n; width = 2 * width) {
+        for (int width = 1; width < n; width += width) {
+            A.initRead();
+            B.initWrite();
             for (int i = 0; i < n; i = i + 2 * width)
                 // Merge two runs: A[i:i+width-1] and A[i+width:i+2*width-1] to B[]
                 // or copy A[i:n-1] to B[] ( if(i+width >= n) )
@@ -48,7 +50,7 @@ class FileSort {
         // While there are elements in the left or right runs...
         for (int k = iLeft; k < iEnd; k++)
             // If left run head exists and is <= existing right run head.
-            if (i < iRight && (j >= iEnd || A.compare(i,j)) )  // A[i] <= A[j]
+            if (i < iRight && (j >= iEnd || A.isFirstLower(i,j)) )  // A[i] <= A[j]
                 B.copyFrom1(A, i++, k);
             else
                 B.copyFrom2(A, j++, k);
