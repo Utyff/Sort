@@ -31,10 +31,9 @@ class FileSort {
             A = B; B = x;
         }
 
-        //
         A.close();
         B.close();
-        System.out.println( A.name );
+        //System.out.println( A.name );
         if( A==src ) { // rename temp to main if need
             new File(_tmp).delete();
         } else {
@@ -58,5 +57,4 @@ class FileSort {
             else
                 B.copyFrom2(A, j++, k);
     }
-
 }
