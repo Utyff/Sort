@@ -27,6 +27,20 @@ class DataFile {
         }
     }
 
+    int getElementsNumber() {
+        long n = 0;
+        try {
+            n = raf.length();
+            if(n%ELEMENT_SIZE!=0)
+                throw new RuntimeException("Wrong file size");
+            n = n/ELEMENT_SIZE;
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return (int)n;
+    }
+
     void initRead() {
         readBlock(0, b1);
         readBlock(0, b2);
@@ -107,7 +121,7 @@ class DataFile {
      * Write always use b1
      */
     void checkWrite(int idx) {
-        if( idx==start1+Math.min(ELEMENTS_NUMBER-start1,BUFFER_SIZE)-1 ) {
+        if( idx==start1+Math.min(FileSort.ELEMENTS_NUMBER-start1,BUFFER_SIZE)-1 ) {
             writeBlock();
             start1 = idx+1;
             //if(start1>=Main.ELEMENTS_NUMBER)  start1=0;
@@ -117,7 +131,7 @@ class DataFile {
     private void readBlock(int start, byte[] bb) {
         try {
             raf.seek(start*ELEMENT_SIZE);
-            raf.read(bb, 0, Math.min(ELEMENTS_NUMBER-start,BUFFER_SIZE)*ELEMENT_SIZE);
+            raf.read(bb, 0, Math.min(FileSort.ELEMENTS_NUMBER-start,BUFFER_SIZE)*ELEMENT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -127,7 +141,7 @@ class DataFile {
     void writeBlock() {
         try {
             raf.seek(start1*ELEMENT_SIZE);
-            raf.write(b1, 0, Math.min(ELEMENTS_NUMBER-start1,BUFFER_SIZE)*ELEMENT_SIZE);
+            raf.write(b1, 0, Math.min(FileSort.ELEMENTS_NUMBER-start1,BUFFER_SIZE)*ELEMENT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);

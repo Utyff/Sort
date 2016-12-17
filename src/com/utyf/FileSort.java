@@ -5,15 +5,18 @@ import java.io.File;
 
 class FileSort {
 
+    static int ELEMENTS_NUMBER;
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     static void doSort(String _src, String _tmp) {
-        int n = Main.ELEMENTS_NUMBER;
         DataFile src = new DataFile(_src);
         DataFile tmp = new DataFile(_tmp);
         DataFile A = src;
         DataFile B = tmp;
+        int n = src.getElementsNumber();
+        ELEMENTS_NUMBER = n;
 
-        // Make successively longer sorted runs of length 2, 4, 8, 16... until whole array is sorted.
+        // Make successively longer sorted runs of length 2, 4, 8, 16... until whole file is sorted.
         for (int width = 1; width < n; width += width) {
             A.initRead();
             B.initWrite();
@@ -22,8 +25,8 @@ class FileSort {
                 // or copy A[i:n-1] to B[] ( if(i+width >= n) )
                 merge(A, i, Math.min(i+width, n), Math.min(i+2*width, n), B);
 
-            // Now work array B is full of runs of length 2*width.
-            // Swap array B and array A for next iteration.
+            // Now work file B is full of runs of length 2*width.
+            // Swap file B and file A for next iteration.
             DataFile x = A; // swap files
             A = B; B = x;
         }
@@ -54,8 +57,6 @@ class FileSort {
                 B.copyFrom1(A, i++, k);
             else
                 B.copyFrom2(A, j++, k);
-
-//        B.writeBlock(); // write last block
     }
 
 }

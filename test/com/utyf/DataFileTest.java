@@ -39,19 +39,15 @@ public class DataFileTest {
 
     @Before
     public void setUp() throws Exception {
-        assertEquals(3,  Main.BUFFER_SIZE);
-        assertEquals(10, Main.ELEMENTS_NUMBER);
-        assertEquals(37, Main.ELEMENT_SIZE);
         new File(FILE_NAME).delete();
         df = new DataFile(FILE_NAME);
     }
 
     private void write10() throws Exception {
-/*        df.raf.seek(0);
-        for( String str : s )
-            df.raf.write( (str+"\n").getBytes(StandardCharsets.US_ASCII) ); */
 
-        for( int i=0; i<Main.ELEMENTS_NUMBER; i++ ) {
+        FileSort.ELEMENTS_NUMBER = s.length;
+
+        for( int i=0; i<s.length; i++ ) {
             String str = s[i];
             setElement(i%Main.BUFFER_SIZE, str);
             df.checkWrite(i);
@@ -93,7 +89,7 @@ public class DataFileTest {
     public void checkRead1() throws Exception {
         write10();
         df.initRead();
-        for( int i=0; i<Main.ELEMENTS_NUMBER; i++ ) {
+        for( int i=0; i<s.length; i++ ) {
             if( i%Main.BUFFER_SIZE==0 )
                 df.checkRead1(i);
             assertTrue( compareElements(df.b1, i%Main.BUFFER_SIZE, s[i]) );
@@ -104,7 +100,7 @@ public class DataFileTest {
     public void checkRead2() throws Exception {
         write10();
         df.initRead();
-        for( int i=0; i<Main.ELEMENTS_NUMBER; i++ ) {
+        for( int i=0; i<s.length; i++ ) {
             if( i%Main.BUFFER_SIZE==0 )
                 df.checkRead2(i);
             assertTrue( compareElements(df.b2, i%Main.BUFFER_SIZE, s[i]) );
@@ -121,13 +117,16 @@ public class DataFileTest {
 
     }
 
-    private int lineCount;
+    private int lineCount; // for lambda
     @Test
     public void createRandom() throws Exception {
-        df.createRandom( 10 );
-        assertEquals( 370, new File(FILE_NAME).length() );
+        final int testSize1 = 10;
+        df.createRandom( testSize1 );
+        assertEquals( testSize1*ELEMENT_SIZE, new File(FILE_NAME).length() );
+
+        final int testSize2 = 100;
         df.createRandom( 100 );
-        assertEquals( 3700, new File(FILE_NAME).length() );
+        assertEquals( testSize2*ELEMENT_SIZE, new File(FILE_NAME).length() );
 
         lineCount=0;
         try (Stream<String> stream = Files.lines(Paths.get(FILE_NAME))) {
@@ -135,7 +134,7 @@ public class DataFileTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        assertEquals(100, lineCount);
+        assertEquals(testSize2, lineCount);
     }
 
     @Test

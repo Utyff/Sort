@@ -6,11 +6,11 @@ import java.util.*;
 @SuppressWarnings("WeakerAccess")
 public class Main {
 
-    static final int ELEMENTS_NUMBER = 10;    // number of elements in file for sort
-    static final int BUFFER_SIZE     = 3;     // number of elements for load into memory. Will create 3 buffers
-    static final int ELEMENT_SIZE    = 37;
     static final String fileName = "ForSort.txt"; // name of file for sort
     static final String tempFile = "temp.txt";    // name of temp file (will be deleted)
+    static final int ELEMENT_SIZE    = 37;        // size of one element in the file
+    static final int BUFFER_SIZE     = 1000;      // number of elements for load into memory. Will create 3 buffers
+    private static final int ELEMENTS_NUMBER = 1000000;    // number of elements in file for sort
 
 
     public static void main(String[] args) {
@@ -19,6 +19,7 @@ public class Main {
         DataFile df = new DataFile(fileName);
         df.createRandom(ELEMENTS_NUMBER);
         df.close();
+        System.out.println( new Date() );
 
         FileSort.doSort(fileName, tempFile);
 
